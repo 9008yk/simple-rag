@@ -2,9 +2,11 @@
 
 ## 1. 文档职责
 
-本文档是项目技术选型、系统架构、接口契约和数据模型的唯一来源。
+本文档是项目技术选型和系统架构的唯一来源。
 
 - 功能范围以 `docs/MVP.md` 为准。
+- API 定义以 `docs/API_CONTRACT.md` 为准。
+- 数据库结构以 `docs/DATABASE_CONTRACT.md` 为准。
 - 开发规则以根目录 `AGENTS.md` 为准。
 - 本文档只描述如何实现，不扩展 MVP 功能范围。
 
@@ -38,100 +40,77 @@
   -> LLM 和 Embedding 服务
 ```
 
-数据存储位置：
+API 密钥通过环境变量读取，不写入仓库。具体存储位置、数据结构、约束和一致性要求见 [`DATABASE_CONTRACT.md`](./DATABASE_CONTRACT.md)。
 
-- 原始文件保存在 `data/uploads/`。
-- Chroma 数据保存在 `data/chroma/`。
-- SQLite 数据库保存在 `data/app.db`。
-- API 密钥通过环境变量读取，不写入仓库。
+## 5. 接口契约
 
-## 5. 接口草案
+后端对外接口由 REST API 和 SSE 流式接口组成。
 
-```text
-GET    /health
-POST   /api/documents
-GET    /api/documents
-GET    /api/documents/{document_id}
-DELETE /api/documents/{document_id}
-POST   /api/chat/stream
-GET    /api/conversations/{conversation_id}
-```
+- `/health` 用于服务健康检查。
+- `/api/documents` 用于文档上传、查询和删除。
+- `/api/chat/stream` 使用 SSE 流式返回问答结果。
+- `/api/conversations/{conversation_id}` 用于查询会话记录。
 
-`POST /api/chat/stream` 请求示例：
+文档上传使用 `multipart/form-data`，其他普通接口使用 JSON。MVP 暂不提供登录和权限认证，所有业务接口统一使用 `/api` 前缀，暂不引入 API 版本号。
 
-```json
-{
-  "question": "项目的目标是什么？",
-  "conversation_id": null
-}
-```
+开发环境中，前端通过 Vite 将 `/health` 和 `/api` 请求代理到 FastAPI。生产部署时，需要通过反向代理或后端静态托管提供相同路径。
 
-SSE 至少包含以下事件：
+文档上传请求只执行文件持久化和 `pending` 记录创建，不执行解析、切分、Embedding 或 LLM 调用。单个文件最大为 `10 MiB`，服务端按块读取并累计大小，超出限制时删除不完整文件并返回 `413`。
 
-```text
-message       回答文本片段
-sources       来源列表
-done          流式回答结束
-error         错误信息
-```
+接口的详细请求、响应、状态码、错误结构和 SSE 事件以 [`API_CONTRACT.md`](./API_CONTRACT.md) 为准。
 
-## 6. 数据模型
+## 6. 数据存储
 
-### 6.1 SQLite
+SQLite 表结构、字段约束、表关系、状态流转、Chroma metadata 和数据一致性要求以 [`DATABASE_CONTRACT.md`](./DATABASE_CONTRACT.md) 为准。
 
-`documents`
+## 7. 接口与数据存储映射
+
+本节说明接口与数据存储之间的关系。接口的请求和响应格式以 [`API_CONTRACT.md`](./API_CONTRACT.md) 为准，表结构、字段约束和删除规则以 [`DATABASE_CONTRACT.md`](./DATABASE_CONTRACT.md) 为准。
+
+| 接口 | 主要操作 | 涉及存储 |
+| --- | --- | --- |
+| `GET /health` | 服务健康检查 | 不访问业务数据 |
+| `POST /api/documents` | 保存原始文件并创建文档记录 | `data/uploads/`、`documents` |
+| `GET /api/documents` | 查询文档列表 | `documents` |
+| `GET /api/documents/{document_id}` | 查询单个文档 | `documents` |
+| `DELETE /api/documents/{document_id}` | 删除原始文件、文档和向量数据 | `data/uploads/`、`documents`、Chroma |
+| `POST /api/chat/stream` | 检索 chunk、生成回答并保存消息与来源 | `conversations`、`messages`、`message_sources`、`documents`、Chroma、LLM |
+| `GET /api/conversations/{conversation_id}` | 查询会话、消息和引用来源 | `conversations`、`messages`、`message_sources`、`documents` |
+
+关键业务过程的存储操作：
 
 ```text
-id
-filename
-file_path
-status
-chunk_count
-error_message
-created_at
-updated_at
+上传文档
+-> 原始文件写入 data/uploads/
+-> documents 插入 pending 记录
+
+文档处理
+-> documents 从 pending 更新为 processing
+-> 切分文本并写入 Chroma
+-> documents 更新为 ready，并保存 chunk_count
+
+文档处理失败
+-> documents 更新为 failed，并保存 error_message
+-> 清理本次已经写入的 Chroma chunk
+
+删除文档
+-> 删除原始文件
+-> 删除 Chroma chunk
+-> 删除 documents 记录
+-> 级联删除 message_sources
+
+流式问答
+-> 创建或读取 conversations
+-> 写入 user message
+-> 从 Chroma 检索相关 chunk
+-> 生成回答
+-> 写入 assistant message
+-> 写入 message_sources
 ```
 
-`conversations`
+跨存储操作必须遵守以下规则：
 
-```text
-id
-title
-created_at
-updated_at
-```
-
-`messages`
-
-```text
-id
-conversation_id
-role
-content
-created_at
-```
-
-`message_sources`
-
-```text
-id
-message_id
-document_id
-chunk_id
-source
-chunk_index
-score
-```
-
-### 6.2 Chroma
-
-每个 chunk 至少保存：
-
-```text
-文本内容
-embedding
-document_id
-chunk_id
-source
-chunk_index
-```
+- 文件保存和 SQLite 记录创建属于同一个业务操作，SQLite 写入失败时删除已保存文件。
+- 只有成功写入 Chroma 后，文档才能更新为 `ready`。
+- 删除文档时，只有原始文件、Chroma 和 SQLite 数据均处理成功后，才能向前端报告删除成功。
+- 聊天回答和来源记录必须同时保存，不能只保存助手回答而丢失引用关系。
