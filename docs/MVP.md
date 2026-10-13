@@ -79,27 +79,11 @@
 
 ## 6. 技术实现
 
-技术栈、系统架构和接口与数据存储映射见 [`TECH_DESIGN.md`](./TECH_DESIGN.md)。接口定义见 [`API_CONTRACT.md`](./API_CONTRACT.md)，数据库结构见 [`DATABASE_CONTRACT.md`](./DATABASE_CONTRACT.md)。
+技术栈、系统架构、接口契约和数据模型见 [`TECH_DESIGN.md`](./TECH_DESIGN.md)。
 
 实现不得超出本文档定义的功能范围。
 
 ## 7. 验收标准
-
-### 7.1 文档上传
-
-- AC-DOC-01：上传 `.txt`、`.md` 或 `.markdown` 文件时返回 `201`。
-- AC-DOC-02：上传成功后，原始文件保存在 `data/uploads/`。
-- AC-DOC-03：上传成功后，`documents` 表中存在一条 `pending` 记录。
-- AC-DOC-04：上传不支持的扩展名时返回 `400`。
-- AC-DOC-05：上传空文件时返回 `400`。
-- AC-DOC-06：请求缺少 `file` 字段时返回 `422`。
-- AC-DOC-07：数据库写入失败时，已经保存的原始文件会被删除。
-- AC-DOC-08：失败请求不会留下无效的文件或数据库记录。
-- AC-DOC-09：相同的原始文件名可以重复上传，并创建不同的文档 ID。
-- AC-DOC-10：超过 `10 MiB` 的文件返回 `413`，且不留下文件和数据库记录。
-- AC-DOC-11：文件存储不可用或磁盘空间不足时返回 `507`，且不创建数据库记录。
-
-### 7.2 总体 MVP
 
 1. 后端和前端可以按照 README 启动。
 2. 上传一个 Markdown 文件后，文档状态最终变为 `ready`。
