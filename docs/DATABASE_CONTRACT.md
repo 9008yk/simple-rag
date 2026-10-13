@@ -286,3 +286,10 @@ data/uploads/
 4. 增加或更新数据库测试。
 
 MVP 使用 `CREATE TABLE IF NOT EXISTS` 初始化新数据库，不自动修改已有表结构。后续字段变更需要显式迁移。
+
+当前仓库提供一次性迁移函数，用于把早期没有 `UNIQUE` 和 `CHECK` 约束的 `documents` 表转换为当前结构：
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -c "from app.db import migrate_documents_constraints; migrate_documents_constraints()"
+```

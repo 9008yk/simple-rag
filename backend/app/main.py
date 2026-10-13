@@ -21,6 +21,13 @@ MAX_FILE_SIZE = 10 * 1024 * 1024
 UPLOAD_CHUNK_SIZE = 1024 * 1024
 
 
+def remove_file_if_exists(path: Path) -> None:
+    try:
+        path.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
@@ -62,11 +69,11 @@ async def upload_document(file: UploadFile = File(...)) -> DocumentResponse:
 
     document_id = uuid4().hex
     upload_dir = get_upload_dir()
-    upload_dir.mkdir(parents=True, exist_ok=True)
     stored_path = upload_dir / f"{document_id}{suffix}"
     bytes_written = 0
 
     try:
+        upload_dir.mkdir(parents=True, exist_ok=True)
         with stored_path.open("wb") as stored_file:
             while chunk := await file.read(UPLOAD_CHUNK_SIZE):
                 bytes_written += len(chunk)
@@ -92,13 +99,13 @@ async def upload_document(file: UploadFile = File(...)) -> DocumentResponse:
             created_at=datetime.now(timezone.utc).isoformat(),
         )
     except OSError as error:
-        stored_path.unlink(missing_ok=True)
+        remove_file_if_exists(stored_path)
         raise HTTPException(
             status_code=507,
             detail="File storage is unavailable.",
         ) from error
     except Exception:
-        stored_path.unlink(missing_ok=True)
+        remove_file_if_exists(stored_path)
         raise
     finally:
         await file.close()

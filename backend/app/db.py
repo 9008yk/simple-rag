@@ -6,6 +6,32 @@ from typing import Iterator
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
+DOCUMENTS_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS documents (
+    id TEXT PRIMARY KEY,
+    filename TEXT NOT NULL,
+    file_path TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL CHECK (
+        status IN ('pending', 'processing', 'ready', 'failed')
+    ),
+    chunk_count INTEGER NOT NULL DEFAULT 0 CHECK (chunk_count >= 0),
+    error_message TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+)
+"""
+
+DOCUMENTS_INDEX_SQL = (
+    """
+    CREATE INDEX IF NOT EXISTS idx_documents_created_at
+    ON documents (created_at DESC)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS idx_documents_status
+    ON documents (status)
+    """,
+)
+
 
 # 定义数据目录,默认使用D:\vue3-program\simple-rag\data
 def get_data_dir() -> Path:
@@ -38,34 +64,90 @@ def get_connection() -> Iterator[sqlite3.Connection]:
 # 初始化数据库,创建documents表
 def init_db() -> None:
     with get_connection() as connection:
+        connection.execute(DOCUMENTS_TABLE_SQL)
+
+        for index_sql in DOCUMENTS_INDEX_SQL:
+            connection.execute(index_sql)
+
+
+def migrate_documents_constraints() -> bool:
+    """Upgrade the pre-constraint documents table without losing rows."""
+    with get_connection() as connection:
+        table = connection.execute(
+            """
+            SELECT sql
+            FROM sqlite_master
+            WHERE type = 'table' AND name = 'documents'
+            """
+        ).fetchone()
+
+        if table is None:
+            connection.execute(DOCUMENTS_TABLE_SQL)
+            for index_sql in DOCUMENTS_INDEX_SQL:
+                connection.execute(index_sql)
+            return True
+
+        if "UNIQUE" in table["sql"] and "CHECK" in table["sql"]:
+            return False
+
+        existing_columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(documents)")
+        }
+        required_columns = {
+            "id",
+            "filename",
+            "file_path",
+            "status",
+            "chunk_count",
+            "error_message",
+            "created_at",
+            "updated_at",
+        }
+        if not required_columns.issubset(existing_columns):
+            raise RuntimeError("documents table cannot be migrated safely.")
+
+        legacy_table = connection.execute(
+            """
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table' AND name = 'documents_legacy'
+            """
+        ).fetchone()
+        if legacy_table is not None:
+            raise RuntimeError("documents_legacy already exists.")
+
+        connection.execute("ALTER TABLE documents RENAME TO documents_legacy")
+        connection.execute(DOCUMENTS_TABLE_SQL)
         connection.execute(
             """
-            CREATE TABLE IF NOT EXISTS documents (
-                id TEXT PRIMARY KEY,
-                filename TEXT NOT NULL,
-                file_path TEXT NOT NULL UNIQUE,
-                status TEXT NOT NULL CHECK (
-                    status IN ('pending', 'processing', 'ready', 'failed')
-                ),
-                chunk_count INTEGER NOT NULL DEFAULT 0 CHECK (chunk_count >= 0),
-                error_message TEXT,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
+            INSERT INTO documents (
+                id,
+                filename,
+                file_path,
+                status,
+                chunk_count,
+                error_message,
+                created_at,
+                updated_at
             )
+            SELECT
+                id,
+                filename,
+                file_path,
+                status,
+                chunk_count,
+                error_message,
+                created_at,
+                updated_at
+            FROM documents_legacy
             """
         )
-        connection.execute(
-            """
-            CREATE INDEX IF NOT EXISTS idx_documents_created_at
-            ON documents (created_at DESC)
-            """
-        )
-        connection.execute(
-            """
-            CREATE INDEX IF NOT EXISTS idx_documents_status
-            ON documents (status)
-            """
-        )
+        connection.execute("DROP TABLE documents_legacy")
+
+        for index_sql in DOCUMENTS_INDEX_SQL:
+            connection.execute(index_sql)
+
+    return True
 
 
 # 创建文档记录
