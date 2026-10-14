@@ -4,9 +4,9 @@
 
 本文档是项目 SQLite 表结构和 Chroma 数据组织的唯一契约来源。
 
-- 功能范围以 `docs/MVP.md` 为准。
-- 接口定义以 `docs/API_CONTRACT.md` 为准。
-- 技术栈和系统架构以 `docs/TECH_DESIGN.md` 为准。
+- 功能范围以 `docs/product/MVP.md` 为准。
+- 接口定义以 `docs/contracts/API_CONTRACT.md` 为准。
+- 技术栈和系统架构以 `docs/architecture/TECH_DESIGN.md` 为准。
 - 数据库结构变更时先更新本文档，再修改代码。
 - `backend/app/db.py` 必须实现本文档定义的约束。
 

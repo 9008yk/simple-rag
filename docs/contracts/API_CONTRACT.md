@@ -4,8 +4,8 @@
 
 本文档是项目 HTTP API 的唯一契约来源，定义请求、响应、错误、状态码和 SSE 事件。
 
-- 功能范围以 `docs/MVP.md` 为准。
-- 技术栈、架构和数据模型以 `docs/TECH_DESIGN.md` 为准。
+- 功能范围以 `docs/product/MVP.md` 为准。
+- 技术栈、架构和数据模型以 `docs/architecture/TECH_DESIGN.md` 为准。
 - API 调整时先更新本文档，再修改后端和前端。
 - FastAPI 生成的 `/docs` 和 `/openapi.json` 必须与本文档一致。
 
