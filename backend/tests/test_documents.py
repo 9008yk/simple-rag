@@ -3,7 +3,7 @@ import sqlite3
 from fastapi.testclient import TestClient
 
 import app.main as main_module
-from app.db import migrate_documents_constraints
+from app.db import create_document, migrate_documents_constraints
 from app.main import app
 
 
@@ -152,6 +152,57 @@ def test_upload_returns_507_when_storage_is_unavailable(tmp_path, monkeypatch):
 
     assert response.status_code == 507
     assert blocked_upload_dir.is_file()
+
+
+def test_list_documents_returns_empty_list(tmp_path, monkeypatch):
+    monkeypatch.setenv("SIMPLE_RAG_DATA_DIR", str(tmp_path))
+
+    with TestClient(app) as client:
+        response = client.get("/api/documents")
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_list_documents_returns_uploaded_document(tmp_path, monkeypatch):
+    monkeypatch.setenv("SIMPLE_RAG_DATA_DIR", str(tmp_path))
+
+    with TestClient(app) as client:
+        upload_response = client.post(
+            "/api/documents",
+            files={"file": ("guide.md", b"# Guide", "text/markdown")},
+        )
+        list_response = client.get("/api/documents")
+
+    assert upload_response.status_code == 201
+    assert list_response.status_code == 200
+
+    documents = list_response.json()
+    assert len(documents) == 1
+    assert documents[0] == upload_response.json()
+    assert "file_path" not in documents[0]
+
+
+def test_list_documents_orders_newest_first(tmp_path, monkeypatch):
+    monkeypatch.setenv("SIMPLE_RAG_DATA_DIR", str(tmp_path))
+
+    with TestClient(app) as client:
+        create_document(
+            document_id="older",
+            filename="older.md",
+            file_path="uploads/older.md",
+            created_at="2026-10-13T00:00:00+00:00",
+        )
+        create_document(
+            document_id="newer",
+            filename="newer.md",
+            file_path="uploads/newer.md",
+            created_at="2026-10-14T00:00:00+00:00",
+        )
+        response = client.get("/api/documents")
+
+    assert response.status_code == 200
+    assert [document["id"] for document in response.json()] == ["newer", "older"]
 
 
 def test_migrate_documents_constraints_preserves_rows(tmp_path, monkeypatch):

@@ -14,7 +14,7 @@ from uuid import uuid4
 from fastapi import FastAPI, File, HTTPException, UploadFile, status
 from pydantic import BaseModel
 
-from app.db import create_document, get_upload_dir, init_db
+from app.db import create_document, get_upload_dir, init_db, list_documents
 
 ALLOWED_SUFFIXES = {".txt", ".md", ".markdown"}
 MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -111,5 +111,10 @@ async def upload_document(file: UploadFile = File(...)) -> DocumentResponse:
         await file.close()
 
     return DocumentResponse(**document)
+
+
+@app.get("/api/documents", response_model=list[DocumentResponse])
+async def get_documents() -> list[DocumentResponse]:
+    return [DocumentResponse(**document) for document in list_documents()]
 
 
