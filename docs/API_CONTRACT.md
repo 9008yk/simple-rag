@@ -15,7 +15,7 @@ MVP 接口实现状态：
 | --- | --- |
 | `GET /health` | 已实现 |
 | `POST /api/documents` | 已实现 |
-| `GET /api/documents` | 待实现 |
+| `GET /api/documents` | 已实现 |
 | `GET /api/documents/{document_id}` | 待实现 |
 | `DELETE /api/documents/{document_id}` | 待实现 |
 | `POST /api/chat/stream` | 待实现 |
