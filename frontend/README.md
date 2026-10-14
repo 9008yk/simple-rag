@@ -1,5 +1,15 @@
-# Vue 3 + TypeScript + Vite
+# Frontend
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+这是 `simple-rag` 的 Vue 3 + Vite 前端应用。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+项目说明和前后端启动方式见根目录 `README.md`。
+
+前端页面、组件、交互状态和验收标准见 [`FRONTEND_SPEC.md`](../docs/engineering/FRONTEND_SPEC.md)。
+
+常用命令：
+
+```powershell
+pnpm install
+pnpm dev
+pnpm build
+```

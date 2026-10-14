@@ -4,9 +4,9 @@
 
 本文档是项目技术选型和系统架构的唯一来源。
 
-- 功能范围以 `docs/MVP.md` 为准。
-- API 定义以 `docs/API_CONTRACT.md` 为准。
-- 数据库结构以 `docs/DATABASE_CONTRACT.md` 为准。
+- 功能范围以 `docs/product/MVP.md` 为准。
+- API 定义以 `docs/contracts/API_CONTRACT.md` 为准。
+- 数据库结构以 `docs/contracts/DATABASE_CONTRACT.md` 为准。
 - 开发规则以根目录 `AGENTS.md` 为准。
 - 本文档只描述如何实现，不扩展 MVP 功能范围。
 
@@ -40,7 +40,7 @@
   -> LLM 和 Embedding 服务
 ```
 
-API 密钥通过环境变量读取，不写入仓库。具体存储位置、数据结构、约束和一致性要求见 [`DATABASE_CONTRACT.md`](./DATABASE_CONTRACT.md)。
+API 密钥通过环境变量读取，不写入仓库。具体存储位置、数据结构、约束和一致性要求见 [`DATABASE_CONTRACT.md`](../contracts/DATABASE_CONTRACT.md)。
 
 ## 5. 接口契约
 
@@ -57,15 +57,15 @@ API 密钥通过环境变量读取，不写入仓库。具体存储位置、数�
 
 文档上传请求只执行文件持久化和 `pending` 记录创建，不执行解析、切分、Embedding 或 LLM 调用。单个文件最大为 `10 MiB`，服务端按块读取并累计大小，超出限制时删除不完整文件并返回 `413`。
 
-接口的详细请求、响应、状态码、错误结构和 SSE 事件以 [`API_CONTRACT.md`](./API_CONTRACT.md) 为准。
+接口的详细请求、响应、状态码、错误结构和 SSE 事件以 [`API_CONTRACT.md`](../contracts/API_CONTRACT.md) 为准。
 
 ## 6. 数据存储
 
-SQLite 表结构、字段约束、表关系、状态流转、Chroma metadata 和数据一致性要求以 [`DATABASE_CONTRACT.md`](./DATABASE_CONTRACT.md) 为准。
+SQLite 表结构、字段约束、表关系、状态流转、Chroma metadata 和数据一致性要求以 [`DATABASE_CONTRACT.md`](../contracts/DATABASE_CONTRACT.md) 为准。
 
 ## 7. 接口与数据存储映射
 
-本节说明接口与数据存储之间的关系。接口的请求和响应格式以 [`API_CONTRACT.md`](./API_CONTRACT.md) 为准，表结构、字段约束和删除规则以 [`DATABASE_CONTRACT.md`](./DATABASE_CONTRACT.md) 为准。
+本节说明接口与数据存储之间的关系。接口的请求和响应格式以 [`API_CONTRACT.md`](../contracts/API_CONTRACT.md) 为准，表结构、字段约束和删除规则以 [`DATABASE_CONTRACT.md`](../contracts/DATABASE_CONTRACT.md) 为准。
 
 | 接口 | 主要操作 | 涉及存储 |
 | --- | --- | --- |

@@ -79,7 +79,7 @@
 
 ## 6. 技术实现
 
-技术栈、系统架构和接口与数据存储映射见 [`TECH_DESIGN.md`](./TECH_DESIGN.md)。接口定义见 [`API_CONTRACT.md`](./API_CONTRACT.md)，数据库结构见 [`DATABASE_CONTRACT.md`](./DATABASE_CONTRACT.md)。
+技术栈、系统架构和接口与数据存储映射见 [`TECH_DESIGN.md`](../architecture/TECH_DESIGN.md)。接口定义见 [`API_CONTRACT.md`](../contracts/API_CONTRACT.md)，数据库结构见 [`DATABASE_CONTRACT.md`](../contracts/DATABASE_CONTRACT.md)。
 
 实现不得超出本文档定义的功能范围。
 
