@@ -2,7 +2,7 @@
 
 一个本地运行的简单 RAG 知识库问答项目。
 
-当前仓库已完成前后端基础骨架，并通过 FastAPI 提供 `/health` 健康检查、`POST /api/documents` 文档上传和 `GET /api/documents` 文档列表接口。文档解析、向量检索和流式问答尚未实现。
+当前仓库已完成前端文档上传和列表界面，并通过 FastAPI 提供 `/health` 健康检查、`POST /api/documents` 文档上传和 `GET /api/documents` 文档列表接口。文档解析、向量检索和流式问答尚未实现。
 
 ## 项目结构
 

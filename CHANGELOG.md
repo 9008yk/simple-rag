@@ -7,6 +7,7 @@
 ### Added
 
 - Vue 3 + Vite 前端骨架。
+- 前端文档上传、状态反馈和文档列表界面。
 - FastAPI 健康检查接口。
 - `POST /api/documents` 文档上传接口。
 - `GET /api/documents` 文档列表接口。
@@ -22,7 +23,6 @@
 
 ### Planned
 
-- 前端文档上传和列表界面。
 - 文档详情和删除接口。
 - 文档解析、切分和 Chroma 写入。
 - 带引用来源的 SSE 流式问答。
