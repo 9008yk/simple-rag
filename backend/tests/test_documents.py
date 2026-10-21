@@ -1,10 +1,16 @@
 import sqlite3
 
+import pytest
 from fastapi.testclient import TestClient
 
 import app.main as main_module
 from app.db import create_document, migrate_documents_constraints
 from app.main import app
+
+
+@pytest.fixture(autouse=True)
+def skip_background_ingestion(monkeypatch):
+    monkeypatch.setattr(main_module, "process_document", lambda _: None)
 
 
 def test_upload_markdown(tmp_path, monkeypatch):

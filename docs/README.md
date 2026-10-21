@@ -11,7 +11,7 @@
 | [TECH_DESIGN.md](./architecture/TECH_DESIGN.md) | 技术栈、系统架构和接口与存储映射 | 当前有效 |
 | [API_CONTRACT.md](./contracts/API_CONTRACT.md) | 请求、响应、错误和 SSE 事件 | 当前有效 |
 | [DATABASE_CONTRACT.md](./contracts/DATABASE_CONTRACT.md) | SQLite 表结构、约束、关系和 Chroma 数据约定 | 当前有效 |
-| [RAG_PIPELINE.md](./ai/RAG_PIPELINE.md) | 解析、切分、Embedding、检索、生成和引用 | 部分待实现 |
+| [RAG_PIPELINE.md](./ai/RAG_PIPELINE.md) | 解析、切分、Embedding、检索、生成和引用 | 摄取已实现，检索待实现 |
 | [CONFIGURATION.md](./engineering/CONFIGURATION.md) | 环境变量、路径、模型和密钥配置 | 部分已实现 |
 | [TESTING.md](./engineering/TESTING.md) | 测试层级、命令、隔离和合并门槛 | 当前有效 |
 | [SECURITY.md](./operations/SECURITY.md) | 文件、数据、模型和密钥安全要求 | 部分待实现 |
@@ -20,6 +20,7 @@
 | [OBSERVABILITY.md](./operations/OBSERVABILITY.md) | 日志、指标、追踪和告警 | 尚未实现 |
 | [ADR-0001](./architecture/adr/0001-use-vue-fastapi-sqlite-chroma.md) | 技术栈选择记录 | 已接受 |
 | [ADR-0002](./architecture/adr/0002-no-agent-in-mvp.md) | MVP 不引入 Agent 的决策 | 已接受 |
+| [ADR-0003](./architecture/adr/0003-rag-ingestion-and-retrieval.md) | RAG 切分、Embedding、检索和后台任务决策 | 已接受 |
 
 ## 按任务阅读文档
 

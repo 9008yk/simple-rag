@@ -1,6 +1,7 @@
 import os
 import sqlite3
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator
 
@@ -188,3 +189,97 @@ def list_documents() -> list[dict]:
         ).fetchall()
 
     return [dict(row) for row in rows]
+
+
+def get_document(document_id: str) -> dict | None:
+    with get_connection() as connection:
+        row = connection.execute(
+            """
+            SELECT
+                id,
+                filename,
+                file_path,
+                status,
+                chunk_count,
+                error_message,
+                created_at,
+                updated_at
+            FROM documents
+            WHERE id = ?
+            """,
+            (document_id,),
+        ).fetchone()
+
+    return dict(row) if row else None
+
+
+def mark_document_processing(document_id: str) -> None:
+    _update_document_status(
+        document_id,
+        status="processing",
+        chunk_count=0,
+        error_message=None,
+    )
+
+
+def mark_document_ready(document_id: str, *, chunk_count: int) -> None:
+    _update_document_status(
+        document_id,
+        status="ready",
+        chunk_count=chunk_count,
+        error_message=None,
+    )
+
+
+def mark_document_failed(document_id: str, *, error_message: str) -> None:
+    _update_document_status(
+        document_id,
+        status="failed",
+        chunk_count=0,
+        error_message=error_message,
+    )
+
+
+def recover_interrupted_documents() -> int:
+    timestamp = datetime.now(timezone.utc).isoformat()
+
+    with get_connection() as connection:
+        cursor = connection.execute(
+            """
+            UPDATE documents
+            SET status = 'failed',
+                error_message = 'Processing was interrupted by a service restart.',
+                updated_at = ?
+            WHERE status = 'processing'
+            """,
+            (timestamp,),
+        )
+
+    return cursor.rowcount
+
+
+def _update_document_status(
+    document_id: str,
+    *,
+    status: str,
+    chunk_count: int,
+    error_message: str | None,
+) -> None:
+    with get_connection() as connection:
+        connection.execute(
+            """
+            UPDATE documents
+            SET status = ?,
+                chunk_count = ?,
+                error_message = ?,
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (
+                status,
+                chunk_count,
+                error_message,
+                datetime.now(timezone.utc).isoformat(),
+                document_id,
+            ),
+        )

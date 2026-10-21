@@ -240,13 +240,19 @@ Chroma 使用一个 collection：
 document_chunks
 ```
 
+Collection 使用 cosine 距离：
+
+```text
+metadata: {"hnsw:space": "cosine"}
+```
+
 每条记录表示一个文档 chunk：
 
 | 数据 | 说明 |
 | --- | --- |
 | Chroma ID | `chunk_id` |
 | document | chunk 原文 |
-| embedding | 由统一 Embedding 模型生成 |
+| embedding | `BAAI/bge-small-zh-v1.5`，512 维，启用归一化 |
 | `document_id` | 所属文档 ID |
 | `chunk_id` | chunk 唯一标识 |
 | `source` | 来源文件名 |
@@ -256,6 +262,7 @@ document_chunks
 
 - 只有 `ready` 文档的 chunk 可以进入检索流程。
 - 同一 collection 中的 embedding 必须来自相同模型和相同维度。
+- 当前模型和维度固定为 `BAAI/bge-small-zh-v1.5` 和 `512`。
 - 写入 Chroma 后再将文档状态更新为 `ready`。
 - 文档处理失败时，必须删除本次已经写入的 Chroma chunk。
 - 删除文档时，先按 `document_id` 删除 Chroma chunk，再删除 SQLite 数据。

@@ -32,29 +32,31 @@ $env:SIMPLE_RAG_DATA_DIR = 'D:\vue3-program\simple-rag\data'
 
 测试必须使用临时目录，不能写入真实 `data/`。
 
-## 4. 计划中的 LLM 配置
+## 4. LLM 配置
 
-以下变量在实现 LLM 前确认并落地：
+以下变量已决策，待问答功能实现：
 
 ```text
-LLM_PROVIDER
+LLM_PROVIDER=openai-compatible
 LLM_API_KEY
 LLM_BASE_URL
 LLM_MODEL
-LLM_TIMEOUT_SECONDS
+LLM_TIMEOUT_SECONDS=60
 ```
 
-## 5. 计划中的 Embedding 配置
+MVP 只支持一个 OpenAI-compatible Chat Completions 服务，不在代码中固定供应商和模型。
 
-以下变量在实现 Embedding 前确认并落地：
+## 5. Embedding 配置
+
+以下变量已决策，待文档摄取功能实现：
 
 ```text
-EMBEDDING_PROVIDER
-EMBEDDING_API_KEY
-EMBEDDING_BASE_URL
-EMBEDDING_MODEL
-EMBEDDING_DIMENSION
+EMBEDDING_PROVIDER=sentence-transformers
+EMBEDDING_MODEL=BAAI/bge-small-zh-v1.5
+EMBEDDING_DIMENSION=512
 ```
+
+Embedding 使用本地模型，不需要 API Key 或 Base URL。未来替换为远程 Provider 时必须先更新本文档和 ADR。
 
 Embedding 模型变更时必须同时更新向量维度、重建 Chroma collection，并记录迁移方式。
 
@@ -67,13 +69,15 @@ Embedding 模型变更时必须同时更新向量维度、重建 Chroma collecti
 最大文件大小：10 MiB
 ```
 
-处理参数在 `docs/ai/RAG_PIPELINE.md` 决策后增加，例如：
+处理参数：
 
 ```text
-CHUNK_SIZE
-CHUNK_OVERLAP
-RETRIEVAL_TOP_K
+CHUNK_SIZE=800
+CHUNK_OVERLAP=120
+RETRIEVAL_TOP_K=4
 ```
+
+详细切分和检索行为以 `docs/ai/RAG_PIPELINE.md` 为准。
 
 ## 7. 密钥和安全
 
