@@ -62,6 +62,15 @@ pnpm build
 - 旧表迁移。
 - 迁移后数据保留。
 
+文档摄取：
+
+- Markdown 标题上下文保留。
+- 800/120 字符切分。
+- 摄取成功后 Chroma chunk 数量和 SQLite 记录一致。
+- Embedding 或解码失败时进入 `failed`。
+- 服务重启时将中断的 `processing` 文档标记为 `failed`。
+- 上传后后台任务被调度。
+
 ## 6. 测试隔离
 
 | 资源 | 隔离方式 |

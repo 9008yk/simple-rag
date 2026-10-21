@@ -11,10 +11,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import FastAPI, File, HTTPException, UploadFile, status
+from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile, status
 from pydantic import BaseModel
 
-from app.db import create_document, get_upload_dir, init_db, list_documents
+from app.db import (
+    create_document,
+    get_upload_dir,
+    init_db,
+    list_documents,
+    recover_interrupted_documents,
+)
+from app.ingestion import process_document
 
 ALLOWED_SUFFIXES = {".txt", ".md", ".markdown"}
 MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -31,6 +38,7 @@ def remove_file_if_exists(path: Path) -> None:
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    recover_interrupted_documents()
     yield
 
 
@@ -57,7 +65,10 @@ async def health() -> dict[str, str]:
     response_model=DocumentResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def upload_document(file: UploadFile = File(...)) -> DocumentResponse:
+async def upload_document(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+) -> DocumentResponse:
     original_name = Path(file.filename or "").name
     suffix = Path(original_name).suffix.lower()
 
@@ -110,6 +121,7 @@ async def upload_document(file: UploadFile = File(...)) -> DocumentResponse:
     finally:
         await file.close()
 
+    background_tasks.add_task(process_document, document_id)
     return DocumentResponse(**document)
 
 
