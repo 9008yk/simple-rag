@@ -71,6 +71,14 @@ pnpm build
 - 服务重启时将中断的 `processing` 文档标记为 `failed`。
 - 上传后后台任务被调度。
 
+向量检索：
+
+- 无 ready 文档时不调用 Embedding。
+- 只查询 SQLite 状态为 `ready` 的文档。
+- 非 ready 文档即使存在 Chroma chunk 也不会返回。
+- Top-K 读取 `RETRIEVAL_TOP_K` 配置。
+- 返回文本、来源、chunk_id、chunk_index 和 cosine 相似度分数。
+
 ## 6. 测试隔离
 
 | 资源 | 隔离方式 |

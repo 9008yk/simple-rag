@@ -1,7 +1,19 @@
+from dataclasses import dataclass
+
 from app.chunking import TextChunk
 from app.db import get_data_dir
 
 COLLECTION_NAME = "document_chunks"
+
+
+@dataclass(frozen=True)
+class RetrievedChunk:
+    document_id: str
+    chunk_id: str
+    source: str
+    chunk_index: int
+    text: str
+    score: float
 
 
 def get_collection():
@@ -49,3 +61,46 @@ def replace_document_chunks(
 
 def delete_document_chunks(document_id: str) -> None:
     get_collection().delete(where={"document_id": document_id})
+
+
+def query_chunks(
+    *,
+    query_embedding: list[float],
+    top_k: int,
+    document_ids: list[str],
+) -> list[RetrievedChunk]:
+    if top_k <= 0:
+        raise ValueError("top_k must be greater than 0.")
+    if not document_ids:
+        return []
+
+    result = get_collection().query(
+        query_embeddings=[query_embedding],
+        n_results=top_k,
+        where={"document_id": {"$in": document_ids}},
+        include=["documents", "metadatas", "distances"],
+    )
+
+    ids = result.get("ids", [[]])[0]
+    documents = result.get("documents", [[]])[0]
+    metadatas = result.get("metadatas", [[]])[0]
+    distances = result.get("distances", [[]])[0]
+
+    chunks: list[RetrievedChunk] = []
+    for index, chunk_id in enumerate(ids):
+        metadata = metadatas[index] or {}
+        text = documents[index] or ""
+        distance = float(distances[index])
+
+        chunks.append(
+            RetrievedChunk(
+                document_id=str(metadata["document_id"]),
+                chunk_id=str(metadata.get("chunk_id", chunk_id)),
+                source=str(metadata["source"]),
+                chunk_index=int(metadata["chunk_index"]),
+                text=str(text),
+                score=1.0 - distance,
+            )
+        )
+
+    return chunks

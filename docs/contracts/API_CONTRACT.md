@@ -93,6 +93,8 @@ POST /api/documents
 }
 ```
 
+`score` 为 `1 - cosine_distance`，数值越高表示越相关。
+
 ## 4. 健康检查
 
 ### GET /health
