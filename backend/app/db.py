@@ -191,6 +191,20 @@ def list_documents() -> list[dict]:
     return [dict(row) for row in rows]
 
 
+def list_ready_document_ids() -> list[str]:
+    with get_connection() as connection:
+        rows = connection.execute(
+            """
+            SELECT id
+            FROM documents
+            WHERE status = 'ready'
+            ORDER BY created_at DESC
+            """
+        ).fetchall()
+
+    return [str(row["id"]) for row in rows]
+
+
 def get_document(document_id: str) -> dict | None:
     with get_connection() as connection:
         row = connection.execute(

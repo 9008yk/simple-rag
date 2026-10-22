@@ -17,6 +17,7 @@
 - Markdown 结构感知切分和 800/120 字符切分参数。
 - 本地 `BAAI/bge-small-zh-v1.5` Embedding 和 Chroma 持久化。
 - 上传后的进程内后台文档摄取、状态流转和重启恢复。
+- 基于 ready 文档的 Chroma Top-K 向量检索。
 
 ### Documentation
 

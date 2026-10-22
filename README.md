@@ -2,7 +2,7 @@
 
 一个本地运行的简单 RAG 知识库问答项目。
 
-当前仓库已完成前端文档上传和列表界面，以及后端文档解析、切分、本地 Embedding 和 Chroma 持久化。FastAPI 提供 `/health`、`POST /api/documents` 和 `GET /api/documents`。向量检索和流式问答尚未实现。
+当前仓库已完成前端文档上传和列表界面，以及后端文档解析、切分、本地 Embedding、Chroma 持久化和 Top-K 向量检索。FastAPI 提供 `/health`、`POST /api/documents` 和 `GET /api/documents`。流式问答尚未实现。
 
 ## 项目结构
 
